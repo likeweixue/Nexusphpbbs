@@ -4,7 +4,7 @@ English | [中文](/README.md)
 
 A forum build based on [NexusPHP](https://nexusphp.org/) 1.10.2 (Laravel 12 + FilamentPHP 5).
 
-- Torrent upload/download/tracker features removed. Forum, users, messages, medals, attendance, exams, admin panel and the original layout are kept.
+- Torrent upload/download/tracker features removed, including the related admin menus and dashboard widgets. Forum, users, messages, medals, attendance, exams, admin panel and the original layout are kept.
 - **No Redis required.** Cache, sessions, rate limiting and locks use a local file store. Only **PHP + MySQL** are needed.
 - **No Composer required.** `vendor/` is bundled (production dependencies only), upload and run.
 

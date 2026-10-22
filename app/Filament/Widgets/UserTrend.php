@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Torrent;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\LineChartWidget;

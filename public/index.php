@@ -2,6 +2,7 @@
 require "../include/bittorrent.php";
 dbconn(true);
 require_once(get_langfile_path());
+require_once(get_langfile_path("forums.php"));
 loggedinorreturn(true);
 $userid = $CURUSER["id"];
 if ($_SERVER["REQUEST_METHOD"] == "POST")
@@ -411,71 +412,9 @@ if ($showstats_main == "yes")
 	echo $Cache->next_row();
 ?>
 <tr><td colspan="4" class="rowhead">&nbsp;</td></tr>
-<?php
-	$Cache->new_page('stats_torrents', 1800, true);
-	if (!$Cache->get_page()){
-	$Cache->add_whole_row();
-	$torrents = number_format(get_row_count("torrents"));
-	$dead = number_format(get_row_count("torrents", "WHERE visible='no'"));
-	$seeders = get_row_count("peers", "WHERE seeder='yes'");
-	$leechers = get_row_count("peers", "WHERE seeder='no'");
-	if ($leechers == 0)
-		$ratio = 0;
-	else
-		$ratio = round($seeders / $leechers * 100);
-	$activewebusernow = get_row_count("users","WHERE last_access >= ".sqlesc(date("Y-m-d H:i:s",(TIMENOW - 900))));
-	$activewebusernow=number_format($activewebusernow);
-	$activetrackerusernow = number_format(get_single_value("peers","COUNT(DISTINCT(userid))"));
-	$peers = number_format($seeders + $leechers);
-	$seeders = number_format($seeders);
-	$leechers = number_format($leechers);
-	$totaltorrentssize = mksize(get_row_sum("torrents", "size"));
-	$totaluploaded = get_row_sum("users","uploaded");
-	$totaldownloaded = get_row_sum("users","downloaded");
-	$totaldata = $totaldownloaded+$totaluploaded;
-?>
-<tr>
-<?php
-	twotd($lang_index['row_torrents'],$torrents);
-	twotd($lang_index['row_dead_torrents'],$dead);
-?>
-</tr>
-<tr>
-<?php
-	twotd($lang_index['row_seeders'],$seeders);
-	twotd($lang_index['row_leechers'],$leechers);
-?>
-</tr>
-<tr>
-<?php
-	twotd($lang_index['row_peers'],$peers);
-	twotd($lang_index['row_seeder_leecher_ratio'],$ratio."%");
-?>
-</tr>
-<tr>
-<?php
-	twotd($lang_index['row_active_browsing_users'], $activewebusernow);
-	twotd($lang_index['row_tracker_active_users'], $activetrackerusernow);
-?>
-</tr>
-<tr>
-<?php
-	twotd($lang_index['row_total_size_of_torrents'],$totaltorrentssize);
-	twotd($lang_index['row_total_uploaded'],mksize($totaluploaded));
-?>
-</tr>
-<tr>
-<?php
-	twotd($lang_index['row_total_downloaded'],mksize($totaldownloaded));
-	twotd($lang_index['row_total_data'],mksize($totaldata));
-?>
-</tr>
-<?php
-	$Cache->end_whole_row();
-	$Cache->cache_page();
-	}
-	echo $Cache->next_row();
-?>
+<tr><td colspan="4" class="text" align="left">
+<?php forum_stats(); ?>
+</td></tr>
 <tr><td colspan="4" class="rowhead">&nbsp;</td></tr>
 <?php
 	$Cache->new_page('stats_classes', 4535, true);

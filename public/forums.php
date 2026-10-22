@@ -8,45 +8,6 @@ if ($enableextforum == 'yes') //check whether internal forum is disabled
 	permissiondenied();
 
 // ------------- start: functions ------------------//
-//print forum stats
-function forum_stats ()
-{
-	global $lang_forums, $Cache, $today_date;
-
-	if (!$activeforumuser_num = $Cache->get_value('active_forum_user_count')){
-		$secs = 900;
-		$dt = date("Y-m-d H:i:s",(TIMENOW - $secs));
-		$activeforumuser_num = get_row_count("users","WHERE forum_access >= ".sqlesc($dt));
-		$Cache->cache_value('active_forum_user_count', $activeforumuser_num, 300);
-	}
-	if ($activeforumuser_num){
-		$forumusers = $lang_forums['text_there'].is_or_are($activeforumuser_num)."<b>".$activeforumuser_num."</b>".$lang_forums['text_online_user'].add_s($activeforumuser_num).$lang_forums['text_in_forum_now'];
-	}
-	else
-		$forumusers = $lang_forums['text_no_active_users'];
-?>
-<h2 align="left"><?php echo $lang_forums['text_stats'] ?></h2>
-<table width="100%"><tr><td class="text">
-<?php
-	if (!$postcount = $Cache->get_value('total_posts_count')){
-		$postcount = get_row_count("posts");
-		$Cache->cache_value('total_posts_count', $postcount, 96400);
-	}
-	if (!$topiccount = $Cache->get_value('total_topics_count')){
-		$topiccount = get_row_count("topics");
-		$Cache->cache_value('total_topics_count', $topiccount, 96500);
-	}
-	if (!$todaypostcount = $Cache->get_value('today_'.$today_date.'_posts_count')) {
-		$todaypostcount = get_row_count("posts", "WHERE added > ".sqlesc(date("Y-m-d")));
-		$Cache->cache_value('today_'.$today_date.'_posts_count', $todaypostcount, 700);
-	}
-	print($lang_forums['text_our_members_have'] ."<b>".$postcount."</b>". $lang_forums['text_posts_in_topics']."<b>".$topiccount."</b>".$lang_forums['text_in_topics']."<b><font class=\"new\">".$todaypostcount."</font></b>".$lang_forums['text_new_post'].add_s($todaypostcount).$lang_forums['text_posts_today']."<br /><br />");
-	print($forumusers);
-?>
-</td></tr></table>
-<?php
-}
-
 //set all topics as read
 function catch_up()
 {

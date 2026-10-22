@@ -141,17 +141,6 @@ class EditSetting extends Page implements HasForms
     private function getTabs(): array
     {
         $tabs = [];
-        $tabs[] = Tab::make(__('label.setting.hr.tab_header'))
-            ->id('hr')
-            ->schema($this->getHitAndRunSchema())
-            ->columns(2)
-        ;
-//        $tabs[] = Forms\Components\Tabs\Tab::make(__('label.setting.require_seed_section.tab_header'))
-//            ->id('require_seed_section')
-//            ->schema($this->getRequireSeedSectionSchema())
-//            ->columns(2)
-//        ;
-
         $tabs[] = Tab::make(__('label.setting.backup.tab_header'))
             ->id('backup')
             ->schema([
@@ -168,23 +157,6 @@ class EditSetting extends Page implements HasForms
                 Radio::make('backup.via_ftp')->options(self::$yesOrNo)->inline(true)->label(__('label.setting.backup.via_ftp'))->helperText(new HtmlString(__('label.setting.backup.via_ftp_help'))),
                 Radio::make('backup.via_sftp')->options(self::$yesOrNo)->inline(true)->label(__('label.setting.backup.via_sftp'))->helperText(new HtmlString(__('label.setting.backup.via_sftp_help'))),
             ])->columns(2);
-
-        $tabs[] = Tab::make(__('label.setting.seed_box.tab_header'))
-            ->id('seed_box')
-            ->schema([
-                Radio::make('seed_box.enabled')->options(self::$yesOrNo)->inline(true)->label(__('label.enabled'))->helperText(__('label.setting.seed_box.enabled_help')),
-                TextInput::make('seed_box.not_seed_box_max_speed')->label(__('label.setting.seed_box.not_seed_box_max_speed'))->helperText(__('label.setting.seed_box.not_seed_box_max_speed_help'))->integer(),
-                Radio::make('seed_box.no_promotion')->options(self::$yesOrNo)->inline(true)->label(__('label.setting.seed_box.no_promotion'))->helperText(__('label.setting.seed_box.no_promotion_help')),
-                TextInput::make('seed_box.max_uploaded')->label(__('label.setting.seed_box.max_uploaded'))->helperText(__('label.setting.seed_box.max_uploaded_help'))->integer(),
-                TextInput::make('seed_box.max_uploaded_duration')->label(__('label.setting.seed_box.max_uploaded_duration'))->helperText(__('label.setting.seed_box.max_uploaded_duration_help'))->integer(),
-            ])->columns(2);
-
-        $id = "meilisearch";
-        $tabs[] = Tab::make(__("label.setting.$id.tab_header"))
-            ->id($id)
-            ->schema($this->getTabMeilisearchSchema($id))
-            ->columns(2)
-        ;
 
         $id = "image_hosting";
         $tabs[] = Tab::make(__("label.setting.$id.tab_header"))
