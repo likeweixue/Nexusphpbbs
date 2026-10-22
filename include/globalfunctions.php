@@ -1631,14 +1631,24 @@ JS;
     \Nexus\Nexus::js($js, 'footer', false);
 }
 
-function render_password_challenge_js(string $formId, string $usernameName, string $passwordOriginalClass): void {
+function render_password_challenge_js(string $formId, string $usernameName, string $passwordOriginalClass, string $fallbackPasswordName = ''): void {
     $formVar = "jqForm" . md5($formId);
+    // If the challenge request fails we can still submit the form with the
+    // plain password. The backend accepts both login modes.
+    $onError = $fallbackPasswordName === ''
+        ? "if (typeof layer !== 'undefined') { layer.alert(error.toString()) } else { alert(error.toString()) }"
+        : "jqForm.find('.{$passwordOriginalClass}').attr('name', '{$fallbackPasswordName}'); jqForm.trigger('submit');";
     $js = <<<JS
 var $formVar = jQuery("#{$formId}");
-$formVar.on("click", "input[type=button]", function() {
+$formVar.on("click", "input[type=button], input[type=submit], button[type=submit]", function(event) {
     let useChallengeResponseAuthentication = $formVar.find("input[name=response]").length > 0
     if (!useChallengeResponseAuthentication) {
+        event.preventDefault()
         return $formVar.submit()
+    }
+    event.preventDefault()
+    if ($formVar.data("challenge-submitting")) {
+        return false
     }
     let jqUsername = $formVar.find("[name={$usernameName}]")
     let jqPassword = $formVar.find(".{$passwordOriginalClass}")
@@ -1647,21 +1657,27 @@ $formVar.on("click", "input[type=button]", function() {
     login(username, password, $formVar)
 })
 async function login(username, password, jqForm) {
+    jqForm.data("challenge-submitting", true)
     try {
-        jQuery('body').loading({stoppable: false});
-        const challengeResponse = await fetch('/api/challenge', {
+        if (jQuery.fn.loading) {
+            jQuery('body').loading({stoppable: false});
+        }
+        const challengeResponse = await fetch('challenge.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ username: username })
         });
-        jQuery('body').loading('stop');
-
+        if (jQuery.fn.loading) {
+            jQuery('body').loading('stop');
+        }
+        if (!challengeResponse.ok) {
+            throw new Error('challenge request failed: ' + challengeResponse.status)
+        }
         const challengeData = await challengeResponse.json();
         if (challengeData.ret !== 0) {
-            layer.alert(challengeData.msg)
-            return
+            throw new Error(challengeData.msg || 'challenge failed')
         }
 
         const clientHashedPassword = sha256(password);
@@ -1670,10 +1686,15 @@ async function login(username, password, jqForm) {
 
         const clientResponse = hmacSha256(challengeData.data.challenge, serverSideHash);
         jqForm.find("input[name=response]").val(clientResponse)
-        jqForm.submit()
+        jqForm.trigger('submit')
     } catch (error) {
         console.error(error);
-        layer.alert(error.toString())
+        if (jQuery.fn.loading) {
+            try { jQuery('body').loading('stop'); } catch (e) {}
+        }
+        {$onError}
+    } finally {
+        jqForm.data("challenge-submitting", false)
     }
 }
 JS;

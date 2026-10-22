@@ -241,7 +241,16 @@ chmod -R 775 storage bootstrap/cache attachments bitbucket
 
 不能。Laravel、Filament、Livewire 等框架代码都在 `vendor/` 里。本版本已经把开发依赖删掉，并保证**上传即可运行，不需要 Composer**。
 
-**6. 依赖安全更新**
+**6. 登录按钮点击没反应 / 登录后没跳转**
+
+0.1.2 已修复该问题。若仍遇到：
+
+- 确认 `public/vendor/` 目录存在，且浏览器能访问 `/vendor/jquery-loading/jquery.loading.min.js`；
+- 清除浏览器缓存后重试；
+- 打开浏览器 F12 Console，看是否有 JS 报错；
+- 0.1.2 已支持“挑战接口失败自动回退密码登录”，即使 `/api` 伪静态没配好也能登录。
+
+**7. 依赖安全更新**
 
 `composer.lock` 保留了上游 1.10.2 的依赖版本。如需升级依赖，请在本地执行 `composer update` 并充分测试后再上传 `vendor/`，不要直接在服务器上盲目更新。
 

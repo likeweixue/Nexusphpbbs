@@ -1,5 +1,31 @@
 # 改造记录（相对 NexusPHP 1.10.2 论坛版）
 
+## 版本历史
+
+### 0.1.2（2026-10-22）— 修复登录按钮
+
+- **根因**：0.1.1 打包时误排除了 `public/vendor/`（jquery.loading 等前端资源）和 `resources/views/vendor/`，登录页的挑战脚本在 `jQuery('body').loading()` 处报错，按钮点击后没有反应。
+- 恢复 `public/vendor/` 与 `resources/views/vendor/` 全部资源。
+- 登录按钮由 `type="button"` 改为 `type="submit"`，密码框始终带 `name="password"`，支持直接点按钮和回车提交。
+- 新增 `public/challenge.php`：登录挑战不再依赖 Laravel 的 `/api/challenge` 路由，普通 PHP 环境即可使用。
+- `takelogin.php` 同时支持“挑战-响应”和“密码”两种登录方式；挑战接口或前端脚本异常时，页面会自动回退为密码提交。
+- 前端脚本增加加载插件缺失、layer 缺失、请求失败等情况的兜底与提示。
+
+### 0.1.1（2026-10-22）— 论坛化 / 去 Redis / 免 Composer
+
+- 移除种子上传、下载、Tracker 等功能入口，保留论坛、用户、消息、勋章、签到、考核、后台等模块。
+- 文件缓存替代 Redis，移除 Horizon，队列改为 sync，安装仅需 PHP + MySQL。
+- `vendor/` 内置生产依赖，服务器无需执行 `composer install`。
+- 安装向导简化，自动生成 APP_KEY/APP_URL。
+
+### 0.1.0（2026-10-22）— 初始论坛版本
+
+- 用户提供的原始论坛版本（基于 NexusPHP 1.10.2）。
+
+---
+
+## 改造目标
+
 改动目标：**去掉 Redis 依赖，服务器只需要 PHP + MySQL；同时保证不需要在服务器上安装 Composer**。论坛页面与后台布局保持原样。
 
 ## 一、总体方案

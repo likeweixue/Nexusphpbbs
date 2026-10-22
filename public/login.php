@@ -49,10 +49,9 @@ if (!empty($_GET["returnto"])) {
 	}
 }
 $useChallengeResponseAuthentication = \App\Models\Setting::getIsUseChallengeResponseAuthentication();
-$passwordName = 'class="password"';
-if (!$useChallengeResponseAuthentication) {
-    $passwordName .= ' name="password"';
-}
+// The password field always has a name so the browser can submit the form
+// even when JavaScript (challenge-response) is unavailable.
+$passwordName = 'class="password" name="password"';
 ?>
 <form id="login-form" method="post" action="takelogin.php">
     <input type="hidden" name="secret" value="<?php echo $secret?>">
@@ -83,7 +82,7 @@ elseif ($securetracker == "op")
 <tr><td class="rowhead"><?php echo $lang_login['text_auto_logout']?></td><td class="rowfollow" align="left"><input class="checkbox" type="checkbox" name="logout" value="yes" /><?php echo $lang_login['checkbox_auto_logout']?></td></tr>
 <!--<tr><td class="rowhead">--><?php //echo $lang_login['text_restrict_ip']?><!--</td><td class="rowfollow" align="left"><input class="checkbox" type="checkbox" name="securelogin" value="yes" />--><?php //echo $lang_login['checkbox_restrict_ip']?><!--</td></tr>-->
 <!--<tr><td class="rowhead">--><?php //echo $lang_login['text_ssl']?><!--</td><td class="rowfollow" align="left"><input class="checkbox" type="checkbox" name="ssl" value="yes" --><?php //echo $sec?><!-- />--><?php //echo $lang_login['checkbox_ssl']?><!--<br /><input class="checkbox" type="checkbox" name="trackerssl" value="yes" --><?php //echo $sectra?><!-- />--><?php //echo $lang_login['checkbox_ssl_tracker']?><!--</td></tr>-->
-<tr><td class="toolbox" colspan="2" align="right"><input id="submit-btn" type="button" value="<?php echo $lang_login['button_login']?>" class="btn" /> <input type="reset" value="<?php echo $lang_login['button_reset']?>" class="btn" /></td></tr>
+<tr><td class="toolbox" colspan="2" align="right"><input id="submit-btn" type="submit" value="<?php echo $lang_login['button_login']?>" class="btn" /> <input type="reset" value="<?php echo $lang_login['button_reset']?>" class="btn" /></td></tr>
 </table>
 <?php
 if (isset($returnto)) {
@@ -134,6 +133,6 @@ print("</td></tr></table></form></td></tr></table>");
 }
 ?>
 <?php
-render_password_challenge_js("login-form", "username", "password");
+render_password_challenge_js("login-form", "username", "password", "password");
 \Nexus\Nexus::js('js/passkey.js', 'footer', true);
 stdfoot();
