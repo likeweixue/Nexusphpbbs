@@ -1,0 +1,104 @@
+img.hitandrun {
+    width: 35px;
+    height: 12px;
+    background: url(icons.gif) no-repeat -100px -171px;
+    margin-left: 0.5em;
+}
+details summary {
+    width: fit-content;
+    line-height: 28px;
+    color: #4d6c99;
+    cursor: pointer;
+    font-weight: 700;
+    background-color: rgba(77, 108, 153, 0.1);
+    padding: 0 10px;
+    transition: margin .15s ease-out;
+}
+details[open] summary {
+    margin-bottom: 10px;
+}
+.layui-layer {
+    color: black;
+}
+.layer-form {
+    padding: 10px 15px;
+}
+.layer-form .form-control-row input{
+    padding: 4px;
+}
+.layer-form .form-control-row .label{
+    margin-bottom: 4px;
+}
+.rainbow {
+    text-align: center;
+    text-decoration: underline;
+    /*font-size: 32px;*/
+    /*font-family: monospace;*/
+    /*letter-spacing: 5px;*/
+    background: linear-gradient(to right, #6666ff, #0099ff , #00ff00, #ff3399, #6666ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow_animation 6s ease-in-out infinite;
+    background-size: 400% 100%;
+}
+
+@keyframes rainbow_animation {
+    0%,100% {
+        background-position: 0 0;
+    }
+
+    50% {
+        background-position: 100% 0;
+    }
+}
+.nexus-media-info-raw {
+    padding: 0 0.5rem;
+    border: none;
+}
+.nexus-media-info-raw .spoiler-title-box{
+    text-align: center;
+}
+.nexus-media-info-raw pre {
+    white-space: break-spaces;
+    overflow-wrap: anywhere;
+}
+.text-muted {
+    color: #7d7b7b
+}
+.codemain>pre {
+    margin: 0;
+}
+.word-break-all {
+    word-break: break-all;
+}
+
+.form-box {
+    padding: 15px;
+}
+.form-control-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+}
+.form-control-row .label {
+    width: 80px
+}
+.form-control-row .field {
+
+}
+.form-control-row input[type=text],textarea {
+    width: 300px;
+    padding: 4px;
+}
+.form-control-row input[type=checkbox] {
+    vertical-align: sub;
+}
+
+.hidden-text {
+    filter: blur(.5em);
+    transition: filter .15s ease-in-out;
+}
+.hidden-text:hover {
+    filter: blur(0);
+}

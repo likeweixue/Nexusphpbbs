@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Filament\Resources\System\IspResource\Pages;
+
+use Filament\Actions\CreateAction;
+use App\Filament\Resources\System\IspResource;
+use Filament\Pages\Actions;
+use Filament\Resources\Pages\ManageRecords;
+
+class ManageIsps extends ManageRecords
+{
+    protected static string $resource = IspResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make(),
+        ];
+    }
+}
