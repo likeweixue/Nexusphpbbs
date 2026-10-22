@@ -47,7 +47,7 @@ return [
         'server_software' => 'Software web',
         'load_average' => 'Media de carga del servidor',
         'filament_version' => 'Versión del archivo',
-        'redis_version' => 'Versión Redis',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Último usuario',

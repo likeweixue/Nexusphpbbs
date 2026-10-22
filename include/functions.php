@@ -2997,7 +2997,7 @@ function stdfoot() {
         $query_name_laravel = [];
         $dbQueryCount = count($query_name) + last_query('COUNT');
     }
-    print (" with <b>".$dbQueryCount."</b> db queries, <b>".$Cache->getCacheReadTimes()."</b> reads and <b>".$Cache->getCacheWriteTimes()."</b> writes of Redis and <b>".mksize(memory_get_usage())."</b> ram]");
+    print (" with <b>".$dbQueryCount."</b> db queries, <b>".$Cache->getCacheReadTimes()."</b> reads and <b>".$Cache->getCacheWriteTimes()."</b> writes of cache and <b>".mksize(memory_get_usage())."</b> ram]");
 	print ("</div>\n");
 	if ($debugQuery) {
 		print("<div id=\"sql_debug\" style='text-align: left;'>SQL query list: <ul>");
@@ -3008,12 +3008,12 @@ function stdfoot() {
             print(sprintf('<li>%s [%s ms]</li>', htmlspecialchars($query['raw_query']), $query['time']));
         }
 		print("</ul>");
-		print("Redis key read: <ul>");
+		print("Cache key read: <ul>");
 		foreach($Cache->getKeyHits('read') as $keyName => $hits) {
 			print("<li>".htmlspecialchars($keyName)." : ".$hits."</li>");
 		}
 		print("</ul>");
-		print("Redis key write: <ul>");
+		print("Cache key write: <ul>");
 		foreach($Cache->getKeyHits('write') as $keyName => $hits) {
 			print("<li>".htmlspecialchars($keyName)." : ".$hits."</li>");
 		}

@@ -11,8 +11,8 @@ require ROOT_PATH . 'include/constants.php';
 $withLaravel = false;
 if (file_exists(ROOT_PATH . '.env')) {
     require ROOT_PATH . 'include/eloquent.php';
-    require ROOT_PATH . 'classes/class_cache_redis.php';
-    $Cache = new class_cache_redis();
+    require ROOT_PATH . 'classes/class_cache_file.php';
+    $Cache = new class_cache_file();
     $withLaravel = true;
 }
 define('WITH_LARAVEL', $withLaravel);

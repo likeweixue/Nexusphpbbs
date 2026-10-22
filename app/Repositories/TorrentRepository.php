@@ -44,6 +44,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Nexus\Cache\FileStore;
 use Nexus\Database\NexusDB;
 use Nexus\Imdb\Imdb;
 use Rhilip\Bencode\Bencode;
@@ -892,7 +893,7 @@ HTML;
      * @param $uid
      * @param $torrentId
      * @return void
-     * @throws \RedisException
+     * @throws \Throwable
      */
     public function addBuySuccessCache($uid, $torrentId, $buyLogId): void
     {
@@ -963,7 +964,7 @@ HTML;
      * @param $uid
      * @param $torrentId
      * @return void
-     * @throws \RedisException
+     * @throws \Throwable
      */
     public function addBuyFailCache($uid, $torrentId): void
     {
@@ -980,7 +981,7 @@ HTML;
      * @param $uid
      * @param $torrentId
      * @return int
-     * @throws \RedisException
+     * @throws \Throwable
      */
     public function getBuyFailCache($uid, $torrentId): int
     {
@@ -1009,7 +1010,7 @@ HTML;
         return sprintf("%s:%s:%s", self::BUY_FAIL_CACHE_KEY_PREFIX, $userId, $torrentId);
     }
 
-    public function addPiecesHashCache(int $torrentId, string $piecesHash): bool|int|\Redis
+    public function addPiecesHashCache(int $torrentId, string $piecesHash): bool|int|FileStore
     {
         $value = $this->buildPiecesHashCacheValue($torrentId, $piecesHash);
         return NexusDB::redis()->hSet(self::PIECES_HASH_CACHE_KEY, $piecesHash, $value);
@@ -1020,7 +1021,7 @@ HTML;
         return  json_encode(['torrent_id' => $torrentId, 'pieces_hash' => $piecesHash]);
     }
 
-    public function delPiecesHashCache(string $piecesHash): bool|int|\Redis
+    public function delPiecesHashCache(string $piecesHash): bool|int|FileStore
     {
         return NexusDB::redis()->hDel(self::PIECES_HASH_CACHE_KEY, $piecesHash);
     }
@@ -1034,7 +1035,7 @@ HTML;
         if (count($piecesHash) > $maxCount) {
             throw new \InvalidArgumentException("too many pieces hash, must less then $maxCount");
         }
-        $pipe = NexusDB::redis()->multi(\Redis::PIPELINE);
+        $pipe = NexusDB::redis()->multi(FileStore::PIPELINE);
         foreach ($piecesHash as $hash) {
             $pipe->hGet(self::PIECES_HASH_CACHE_KEY, $hash);
         }
@@ -1072,7 +1073,7 @@ HTML;
                 do_log("page: $page, size: $size, no more data...");
                 break;
             }
-            $pipe = NexusDB::redis()->multi(\Redis::PIPELINE);
+            $pipe = NexusDB::redis()->multi(FileStore::PIPELINE);
             $piecesHashCaseWhen = $updateIdArr = [];
             $currentCount = 0;
             foreach ($list as $item) {

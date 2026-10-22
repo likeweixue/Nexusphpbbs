@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\IpLog;
 use Carbon\Carbon;
+use Nexus\Cache\FileStore;
 use Nexus\Database\NexusDB;
 
 class IpLogRepository extends BaseRepository
@@ -47,7 +48,7 @@ class IpLogRepository extends BaseRepository
         $period = new \DatePeriod($begin->clone(), $interval, $end);
         $size = 2000;
         do_log(sprintf("begin: %s, end: %s, size: %s", $begin->toDateTimeString(), $end->toDateTimeString(), $size));
-        $redis->setOption(\Redis::OPT_SCAN, \Redis::SCAN_RETRY);
+        $redis->setOption(FileStore::OPT_SCAN, FileStore::SCAN_RETRY);
         foreach ($period as $dt) {
             $key = sprintf("%s:%s", self::CACHE_KEY_PREFIX, $dt->format('Y-m-d-H'));
             if (!$redis->exists($key)) {

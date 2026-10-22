@@ -47,7 +47,7 @@ return [
         'server_software' => 'Soft web',
         'load_average' => 'Media încărcării serverului',
         'filament_version' => 'Versiune filament',
-        'redis_version' => 'Versiunea Redis',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Ultimul utilizator',

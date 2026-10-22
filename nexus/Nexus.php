@@ -4,8 +4,6 @@ namespace Nexus;
 use App\Http\Middleware\Locale;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\Capsule\Manager;
-use Illuminate\Redis\RedisManager;
 use Illuminate\Support\Arr;
 use Nexus\Translation\NexusTranslator;
 
@@ -34,8 +32,6 @@ final class Nexus
     private static array $translations = [];
 
     private static ?NexusTranslator $translator = null;
-
-    private static ?Manager $queueManager = null;
 
     const QUEUE_CONNECTION_NAME = 'my_queue_connection';
 
@@ -110,8 +106,9 @@ final class Nexus
         $this->logSequence++;
     }
 
-    private function getFirst(string $result): string
+    private function getFirst(?string $result): string
     {
+        $result = (string)$result;
         if (str_contains($result, ",")) {
             return strstr($result, ",", true);
         }
@@ -123,9 +120,7 @@ final class Nexus
         $schema = $this->retrieveFromServer(['HTTP_X_FORWARDED_PROTO', 'REQUEST_SCHEME', 'HTTP_SCHEME']);
         if (empty($schema)) {
             $https = $this->retrieveFromServer(['HTTPS']);
-            if ($https == 'on') {
-                $schema = 'https';
-            }
+            $schema = $https == 'on' ? 'https' : 'http';
         }
         return $this->getFirst($schema);
     }
@@ -406,39 +401,27 @@ final class Nexus
         return self::$translator;
     }
 
-    private static function getQueueManager(): Manager
-    {
-        if (is_null(self::$queueManager)) {
-            $container = Container::getInstance();
-            $redisConfig = nexus_config('nexus.redis');
-            $redisConnectionName = "my_redis_connection";
-            $container->singleton('redis', function ($app) use ($redisConfig, $redisConnectionName)  {
-                $redisDriver = "phpredis";
-                // 这里的配置应该匹配 redis.php 配置文件中的 default 连接
-                $connectionConfig = [
-                    'client' => $redisDriver,
-                    $redisConnectionName => $redisConfig
-                ];
-                return new RedisManager($app, $redisDriver, $connectionConfig);
-            });
-            $queueManager = new Manager($container);
-            $queueManager->addConnection([
-                'driver' => 'redis',
-                'host' => $redisConfig['host'],
-                'password' => $redisConfig['password'],
-                'queue' => 'nexus_queue', // 队列名称
-                'connection' => $redisConnectionName, // Redis 连接名称，类似注册的 'redis' 服务中的 'default'
-            ], self::QUEUE_CONNECTION_NAME); // 将这个 queue 连接起个不一样的名字
-            $queueManager->setAsGlobal();
-            self::$queueManager = $queueManager;
-        }
-        return self::$queueManager;
-    }
-
+    /**
+     * Dispatch a job from a legacy page.
+     *
+     * Legacy pages only bootstrap Eloquent, not the full Laravel application,
+     * so there is no queue worker / Redis available.  When the container is
+     * booted we use the configured Laravel queue (sync by default), otherwise
+     * the job is executed in-process.
+     */
     public static function dispatchQueueJob(ShouldQueue $job): void
     {
-        self::getQueueManager()->connection(self::QUEUE_CONNECTION_NAME)->push($job);
-        do_log("dispatchQueueJob: " . nexus_json_encode($job));
+        try {
+            $container = Container::getInstance();
+            if ($container && $container->bound('queue')) {
+                $container->make('queue')->connection()->push($job);
+            } else {
+                $job->handle();
+            }
+            do_log("dispatchQueueJob: " . get_class($job));
+        } catch (\Throwable $throwable) {
+            do_log("dispatchQueueJob " . get_class($job) . " failed: " . $throwable->getMessage() . "\n" . $throwable->getTraceAsString(), 'error');
+        }
     }
 
 

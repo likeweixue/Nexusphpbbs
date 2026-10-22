@@ -47,7 +47,7 @@ return [
         'server_software' => 'Webソフトウェア',
         'load_average' => 'サーバー負荷平均',
         'filament_version' => 'フィラメントバージョン',
-        'redis_version' => 'Redis バージョン',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => '最新のユーザー',

@@ -1,5 +1,5 @@
 <?php
-require_once("../include/bittorrent.php");
+require_once(__DIR__ . "/../include/bittorrent.php");
 dbconn();
 if ($useCronTriggerCleanUp) {
 	$return = autoclean();

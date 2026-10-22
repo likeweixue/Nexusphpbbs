@@ -1,5 +1,10 @@
 <?php
 
+$queueConnection = env('QUEUE_CONNECTION', 'sync');
+if ($queueConnection === 'redis') {
+    $queueConnection = 'sync';
+}
+
 return [
 
     /*
@@ -13,7 +18,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'redis'),
+    'default' => $queueConnection,
 
     /*
     |--------------------------------------------------------------------------

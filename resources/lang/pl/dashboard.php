@@ -47,7 +47,7 @@ return [
         'server_software' => 'Oprogramowanie sieciowe',
         'load_average' => 'Średnie obciążenie serwera',
         'filament_version' => 'Wersja Filament',
-        'redis_version' => 'Wersja Redis',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Użytkownik najnowszy',

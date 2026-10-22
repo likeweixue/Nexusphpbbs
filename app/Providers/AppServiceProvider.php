@@ -9,12 +9,15 @@ use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Laravel\Passport\Passport;
+use Nexus\Cache\FileCacheStore;
+use Nexus\Cache\FileStore;
 use Nexus\Database\NexusDB;
 use Nexus\Nexus;
 use Filament\Facades\Filament;
@@ -38,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // NexusPHP used Redis for its cache.  The "nexus" driver below is a
+        // file backed store shared with the legacy pages, so no Redis server
+        // or phpredis extension is required anymore.
+        Cache::extend('nexus', function ($app) {
+            return $app['cache']->repository(new FileCacheStore(FileStore::instance()));
+        });
+
         global $plugin;
         $plugin->start();
         NexusDB::customModel();

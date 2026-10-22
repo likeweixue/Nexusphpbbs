@@ -10,7 +10,6 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redis;
 use Laravel\Passport\Passport;
 use Laravel\Sanctum\Sanctum;
 
@@ -395,16 +394,17 @@ class NexusDB
     }
 
     /**
-     * @return mixed|\Redis|null
+     * Return the shared cache backend.
+     *
+     * Historically this returned a phpredis client.  It now returns the
+     * file based store which implements the same API, so all call sites keep
+     * working without Redis being installed.
+     *
+     * @return \Nexus\Cache\FileStore
      */
     public static function redis()
     {
-        if (IN_NEXUS) {
-            global $Cache;
-            return $Cache->getRedis();
-        } else {
-            return Redis::connection()->client();
-        }
+        return \Nexus\Cache\FileStore::instance();
     }
 
     public static function getMysqlColumnInfo($table, $column = null)

@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\Torrent;
 use App\Models\UserRequireSeedTorrent;
 use Illuminate\Support\Collection;
+use Nexus\Cache\FileStore;
 use Nexus\Database\NexusDB;
 
 class RequireSeedTorrentRepository extends BaseRepository
@@ -121,7 +122,7 @@ class RequireSeedTorrentRepository extends BaseRepository
         return sprintf("%s:%s", Torrent::REQUIRE_SEED_SECTION_TORRENT_USER_CACHE_KEY, $torrentId);
     }
 
-    public static function shouldRecordUser(\Redis $redis, $userId, $torrentId): bool
+    public static function shouldRecordUser(FileStore $redis, $userId, $torrentId): bool
     {
         $logPrefix = "userId: $userId, torrentId: $torrentId";
         //check enabled or not
@@ -144,7 +145,7 @@ class RequireSeedTorrentRepository extends BaseRepository
         return true;
     }
 
-    public static function recordUser(\Redis $redis, $userId, $torrentId, array $snatchedInfo): void
+    public static function recordUser(FileStore $redis, $userId, $torrentId, array $snatchedInfo): void
     {
         $torrentUserCacheKey = self::getTorrentUserCacheKey($torrentId);
         $nowStr = now()->toDateTimeString();

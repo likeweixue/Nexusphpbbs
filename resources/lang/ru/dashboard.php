@@ -47,7 +47,7 @@ return [
         'server_software' => 'Веб-приложение',
         'load_average' => 'Средняя загрузка сервера',
         'filament_version' => 'Версия нити накала',
-        'redis_version' => 'Версия Redis',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Последний пользователь',

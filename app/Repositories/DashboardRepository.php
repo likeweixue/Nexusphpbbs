@@ -58,11 +58,11 @@ class DashboardRepository extends BaseRepository
 //            'text' => nexus_trans("dashboard.system_info.$name"),
 //            'value' => PHP_OS,
 //        ];
-        $name = 'redis_version';
+        $name = 'cache_backend';
         $result[$name] = [
             'name' => $name,
             'text' => nexus_trans("dashboard.system_info.$name"),
-            'value' =>  NexusDB::redis()->info()['redis_version'],
+            'value' =>  'file',
         ];
 
         $name = 'server_software';

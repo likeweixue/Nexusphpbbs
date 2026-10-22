@@ -28,13 +28,6 @@ return [
         ]) : [],
     ],
 
-    'redis' => [
-        'host' => nexus_env('REDIS_HOST', '127.0.0.1'),
-        'port' => (int)nexus_env('REDIS_PORT', 6379),
-        'database' => nexus_env('REDIS_DB', 0),
-        'password' => nexus_env('REDIS_PASSWORD'),
-    ],
-
     'elasticsearch' => [
         'hosts' => [
             [

@@ -17,7 +17,7 @@ $pass = true;
 if ($currentStep == 1) {
     $requirements = $install->listRequirementTableRows();
     $pass = $requirements['pass'];
-    if ($isPost) {
+    if ($isPost && $pass) {
         $install->nextStep();
     }
 }
@@ -104,8 +104,10 @@ if ($currentStep == 4) {
     $tableRows = $settingTableRows['table_rows'];
     $pass = $settingTableRows['pass'];
     $mysqlInfo = $install->getMysqlVersionInfo();
-    $redisInfo = $install->getREdisVersionInfo();
-    while ($isPost) {
+    if (isset($mysqlInfo) && !$mysqlInfo['match']) {
+        $pass = false;
+    }
+    while ($isPost && $pass) {
         set_time_limit(300);
         try {
             $install->createSymbolicLinks($symbolicLinks);
@@ -142,7 +144,6 @@ if ($currentStep == 5) {
 if (
     !empty($error)
     || (isset($mysqlInfo) && !$mysqlInfo['match'])
-    || (isset($redisInfo) && !$redisInfo['match'])
 ) {
     $pass = false;
 }
@@ -154,7 +155,7 @@ if (
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <link href="tailwind.min.css" rel="stylesheet">
     <title>Install NexusPHP | step <?php echo $currentStep?></title>
   </head>
   <body>
@@ -190,9 +191,6 @@ if (
                     echo '</div>';
                     if (!$mysqlInfo['match']) {
                         echo sprintf('<div class="text-red-700 pt-10">MySQL version: %s is too low, please use the newest version of 5.7 or above.</div>', $mysqlInfo['version']);
-                    }
-                    if (!$redisInfo['match']) {
-                        echo sprintf('<div class="text-red-700 pt-10">Redis version: %s is too low, please use 2.0.0 or above.</div>', $redisInfo['version']);
                     }
                 } elseif ($currentStep == 5) {
                     echo $install->renderForm($userFormControls, '1/2', '1/4', '3/4');

@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Nexus\Cache\FileStore;
 use Nexus\Database\NexusDB;
 
 class CleanupRepository extends BaseRepository
@@ -39,7 +40,7 @@ class CleanupRepository extends BaseRepository
 
     private static int $scanSize = 500;
 
-    public static function recordBatch(\Redis $redis, $uid, $torrentId)
+    public static function recordBatch(FileStore $redis, $uid, $torrentId)
     {
         $args = [
             self::USER_SEED_BONUS_BATCH_KEY, self::USER_SEEDING_LEECHING_TIME_BATCH_KEY, self::TORRENT_SEEDERS_ETC_BATCH_KEY,
@@ -100,7 +101,7 @@ class CleanupRepository extends BaseRepository
         $length = $redis->hLen($batch);
         $page = 0;
         /* Don't ever return an empty array until we're done iterating */
-        $redis->setOption(\Redis::OPT_SCAN, \Redis::SCAN_RETRY);
+        $redis->setOption(FileStore::OPT_SCAN, FileStore::SCAN_RETRY);
         while($arr_keys = $redis->hScan($batch, $it, "*", self::$scanSize)) {
             $delay = self::getDelay($batchKeyInfo['task_index'], $length, $page);
             $toRemoveFields = $validFields = [];
@@ -140,7 +141,7 @@ class CleanupRepository extends BaseRepository
 
 
 
-    private static function getBatch(\Redis $redis, $batchKey)
+    private static function getBatch(FileStore $redis, $batchKey)
     {
         $batch = $redis->get($batchKey);
         if ($batch === false) {

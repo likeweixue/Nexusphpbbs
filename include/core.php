@@ -18,10 +18,10 @@ if (is_fpm_mode()) {
     }
 }
 require $rootpath . 'nexus/Database/helpers.php';
-require $rootpath . 'classes/class_cache_redis.php';
+require $rootpath . 'classes/class_cache_file.php';
 require $rootpath . 'include/eloquent.php';
 ini_set('date.timezone', nexus_config('nexus.timezone'));
-$Cache = new class_cache_redis(); //Load the caching class
+$Cache = new class_cache_file(); //Load the caching class
 $Cache->setLanguageFolderArray(get_langfolder_list());
 require $rootpath . 'include/config.php';
 $script = nexus()->getScript();

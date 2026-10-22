@@ -29,14 +29,12 @@ class Install
     protected $envNames = [
         'TIMEZONE',
         'DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE',
-        'REDIS_HOST', 'REDIS_PORT', 'REDIS_DB', 'REDIS_PASSWORD',
         'UID_STARTS',
     ];
 
     protected array $requiredExtensions = [
         'ctype', 'curl', 'fileinfo', 'json', 'mbstring', 'openssl', 'pdo_mysql', 'tokenizer', 'xml',
-        'mysqli', 'bcmath', 'redis', 'gd', 'gmp', 'Zend OPcache', 'pcntl', 'posix', 'sockets', 'zip', 'intl',
-        'sqlite3', 'pdo_sqlite'
+        'mysqli', 'bcmath', 'gd', 'gmp', 'zip', 'intl', 'sqlite3', 'pdo_sqlite'
     ];
 
     protected array $conflictExtensions = [
@@ -47,7 +45,6 @@ class Install
     ];
     protected array $requiredFunctions = [
         'symlink', 'putenv', 'proc_open', 'proc_get_status', 'exec',
-        'pcntl_signal', 'pcntl_alarm', 'pcntl_async_signals'
     ];
 
     const INSTALL_LOCK_FILE = 'dont_delete_install.lock';
@@ -530,12 +527,6 @@ class Install
                 $this->doLog("[CREATE ENV] key: $key, new value: $value from example.");
                 $newData[$key] = $value;
             }
-            if ($key == 'CACHE_DRIVER') {
-                $newData[$key] = 'redis';
-            }
-            if ($key == 'QUEUE_CONNECTION') {
-                $newData[$key] = 'redis';
-            }
             if ($scene == 'install' || !file_exists($envFile)) {
                 if ($key == 'APP_ENV') {
                     $newData[$key] = 'production';
@@ -548,20 +539,19 @@ class Install
                 }
             }
         }
+        // No Redis: use the file cache and run jobs in-process.
+        $newData['CACHE_STORE'] = 'nexus';
+        $newData['SESSION_DRIVER'] = 'file';
+        $newData['QUEUE_CONNECTION'] = 'sync';
+        if (empty($newData['APP_KEY'])) {
+            $newData['APP_KEY'] = 'base64:' . base64_encode(random_bytes(32));
+        }
+        if (empty($newData['APP_URL']) || $newData['APP_URL'] == 'http://localhost') {
+            $newData['APP_URL'] = getSchemeAndHttpHost();
+        }
         $this->doLog("[CREATE ENV] final newData: " . json_encode($newData));
         unset($key, $value);
         mysql_connect($newData['DB_HOST'], $newData['DB_USERNAME'], $newData['DB_PASSWORD'], $newData['DB_DATABASE'], (int)$newData['DB_PORT']);
-        $redis = new \Redis();
-        $redis->connect($newData['REDIS_HOST'], $newData['REDIS_PORT'] ?: 6379);
-        if (!empty($data['REDIS_PASSWORD'])) {
-            $redis->auth($data['REDIS_PASSWORD']);
-        }
-        if (isset($newData['REDIS_DB'])) {
-            if (!ctype_digit($newData['REDIS_DB']) || $newData['REDIS_DB'] < 0 || $newData['REDIS_DB'] > 15) {
-                throw new \InvalidArgumentException("invalid redis database: " . $newData['REDIS_DB']);
-            }
-            $redis->select($newData['REDIS_DB']);
-        }
         $content = "";
         foreach ($newData as $key => $value) {
             $content .= "{$key}={$value}\n";
@@ -672,15 +662,45 @@ class Install
         if (!WITH_LARAVEL) {
             throw new \RuntimeException('Laravel is not available.');
         }
-        $command = "php " . ROOT_PATH . "artisan migrate";
+        $command = escapeshellarg($this->phpBinary()) . " " . escapeshellarg(ROOT_PATH . "artisan") . " migrate";
         if (!is_null($path)) {
             foreach ((array)$path as $key => $value) {
-                $command .= " --path=$value";
+                $command .= " --path=" . escapeshellarg($value);
             }
         }
         $command .= " --force";
         $this->executeCommand($command);
         $this->doLog("[MIGRATE] success.");
+    }
+
+    /**
+     * Find the PHP CLI binary.  PHP_BINDIR points to the directory of the
+     * running PHP, which contains the CLI binary on most control panels.
+     */
+    public function phpBinary(): string
+    {
+        $configured = trim((string)nexus_env('PHP_PATH', ''));
+        if ($configured !== '') {
+            if (str_contains($configured, '/') && is_executable($configured)) {
+                return $configured;
+            }
+            if (!str_contains($configured, '/')) {
+                return $configured;
+            }
+        }
+        $candidates = [
+            PHP_BINDIR . '/php',
+            '/usr/bin/php',
+            '/usr/local/bin/php',
+            '/opt/homebrew/bin/php',
+        ];
+        foreach ($candidates as $candidate) {
+            if (is_executable($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return 'php';
     }
 
     public function executeCommand($command)
@@ -700,7 +720,7 @@ class Install
         if (!WITH_LARAVEL) {
             throw new \RuntimeException('Laravel is not available.');
         }
-        $command = "php " . ROOT_PATH . "artisan db:seed --force";
+        $command = escapeshellarg($this->phpBinary()) . " " . escapeshellarg(ROOT_PATH . "artisan") . " db:seed --force";
         $result = exec($command, $output, $result_code);
         $this->doLog(sprintf('command: %s, result_code: %s, result: %s', $command, $result_code, $result));
         $this->doLog("output: " . json_encode($output));
@@ -725,16 +745,6 @@ class Install
         $result = NexusDB::select($sql);
         $version = $result[0]['v'];
         $minVersion = '5.7.8';
-        $match = version_compare($version, $minVersion, '>=');
-        return compact('version', 'match', 'minVersion');
-    }
-
-    public function getRedisVersionInfo(): array
-    {
-        $redis = NexusDB::redis();
-        $result = $redis->info();
-        $version = $result['redis_version'];
-        $minVersion = '4.0.0';
         $match = version_compare($version, $minVersion, '>=');
         return compact('version', 'match', 'minVersion');
     }

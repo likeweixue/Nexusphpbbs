@@ -47,7 +47,7 @@ return [
         'server_software' => 'Web software',
         'load_average' => 'Server load gennemsnit',
         'filament_version' => 'Filament version',
-        'redis_version' => 'Redis version',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Bruger seneste',

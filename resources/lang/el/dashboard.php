@@ -47,7 +47,7 @@ return [
         'server_software' => 'Λογισμικό ιστού',
         'load_average' => 'Μέσος όρος φορτίου διακομιστή',
         'filament_version' => 'Έκδοση νήματος',
-        'redis_version' => 'Έκδοση Redis',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Τελευταία χρήση',

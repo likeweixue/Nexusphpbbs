@@ -47,7 +47,7 @@ return [
         'server_software' => 'Webbprogramvara',
         'load_average' => 'Medelvärde för serverbelastning',
         'filament_version' => 'Filamentversion',
-        'redis_version' => 'Redis version',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Användare senaste',

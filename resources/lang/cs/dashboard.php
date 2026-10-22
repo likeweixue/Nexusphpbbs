@@ -47,7 +47,7 @@ return [
         'server_software' => 'Webový software',
         'load_average' => 'Průměrné zatížení serveru',
         'filament_version' => 'Verze Filament',
-        'redis_version' => 'Redis verze',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Poslední uživatel',

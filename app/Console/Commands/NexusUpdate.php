@@ -109,7 +109,6 @@ class NexusUpdate extends Command
         $symbolicLinks = $settingTableRows['symbolic_links'];
         $fails = $settingTableRows['fails'];
         $mysqlInfo = $this->update->getMysqlVersionInfo();
-        $redisInfo = $this->update->getRedisVersionInfo();
 
         if (!empty($fails)) {
             foreach ($fails as $value) {
@@ -120,11 +119,6 @@ class NexusUpdate extends Command
         if (!$mysqlInfo['match']) {
             $minVersion = $mysqlInfo['minVersion'] ?? '5.7.8';
             $this->doLog("Error: MySQL version: {$mysqlInfo['version']} is too low, please use the newest version of {$minVersion} or above.", 'error');
-            return 0;
-        }
-        if (!$redisInfo['match']) {
-            $minVersion = $redisInfo['minVersion'] ?? '2.6.12';
-            $this->doLog("Error: Redis version: {$mysqlInfo['version']} is too low, please use {$minVersion} or above.", 'error');
             return 0;
         }
         $this->doLog("going to update .env file ...");

@@ -1,62 +1,37 @@
-English | [中文](/)
+English | [中文](/README.md)
 
-Complete PT website building solution. Based on NexusPHP + Laravel + FilamentPHP.
+# NexusPHP Forum Edition (No Torrent · No Redis · No Composer)
 
-Welcome to participate in internationalization work, click [here](https://github.com/xiaomlove/nexusphp/discussions/193) for more information
+A forum build based on [NexusPHP](https://nexusphp.org/) 1.10.2 (Laravel 12 + FilamentPHP 5).
 
-## Functional Features
+- Torrent upload/download/tracker features removed. Forum, users, messages, medals, attendance, exams, admin panel and the original layout are kept.
+- **No Redis required.** Cache, sessions, rate limiting and locks use a local file store. Only **PHP + MySQL** are needed.
+- **No Composer required.** `vendor/` is bundled (production dependencies only), upload and run.
 
-- Upload torrent
-- Special section  
-- Request torrent
-- Subtitle
-- Exam
-- H&R
-- Claim  
-- Approval  
-- Attendance
-- Retroactive attendance card  
-- Medal
-- Props  
-- Custom tags 
-- Third-party full-text search
-- SeedBox rule  
-- Forum
-- Complain  
-- Multi-language
-- Automatic backup
-- Plugin support  
-- Backend management system
-- Json API
-- ....
- 
-#### The following functions are provided by the plugin
-- Post like
-- Post reward
-- Sticky promotion
-- Custom menu
-- Lucky draw
-- Custom role permission
-- Section H&R
-- TGBot
-## System Requirements
-- PHP: 8.2|8.3|8.4|8.5, must have extensions: bcmath, ctype, curl, fileinfo, json, mbstring, openssl, pdo_mysql, tokenizer, xml, mysqli, gd, redis, pcntl, sockets, posix, gmp, zend opcache, zip, intl, pdo_sqlite, sqlite3
-- Mysql: 5.7 latest version or above
-- Redis：4.0.0 or above
-- Others: supervisor, rsync
+## Requirements
 
-## Quick Start
-Install docker.  
-Where DOMAIN is the domain name you want to use, first do a good resolution. If you don't have a domain name, you can use IP.   
-If the local port 80 is already used, please change it and make sure the port is open to the public.  
-Step 2 Create .env Select the correct time zone TIMEZONE, other defaults are fine.  
+- PHP 8.2 – 8.5 with extensions: `bcmath ctype curl fileinfo json mbstring openssl pdo_mysql tokenizer xml mysqli gd gmp zip intl sqlite3 pdo_sqlite`
+- MySQL 5.7.8+ / 8.0+ (8.0+ recommended)
+- Document root must point to `public/`
+- No Redis, Composer or Node.js
+
+## Quick start
+
+1. Upload this directory to your server.
+2. Point the website document root to `public/`.
+3. Nginx: `try_files $uri $uri/ /nexus.php?$query_string;`
+4. Open `/install/install.php` and fill in the MySQL connection.
+5. Delete `public/install/` after installation.
+6. Add cron jobs: `php artisan schedule:run` every minute and `php public/cron.php` every 5 minutes.
+
+See the detailed Chinese guide: [INSTALL-zh.md](INSTALL-zh.md).
+
+## Admin panel
+
 ```
-docker pull xiaomlove/nexusphp:latest
-docker run --name my-nexusphp -e DOMAIN=xxx.com -p 80:80 xiaomlove/nexusphp:latest
+https://your-domain/nexusphp
 ```
-**Production environments are recommended to refer to the documentation for live installation.**
 
-## More information
-Blog：[https://nexusphp.org](https://nexusphp.org/)  
-Documentation：[https://doc.nexusphp.org](https://doc.nexusphp.org/en/)  
-Telegram: [https://t.me/nexusphp_dev](https://t.me/nexusphp_dev)  
+## License
+
+GPL-2.0, following the upstream project: https://github.com/xiaomlove/nexusphp

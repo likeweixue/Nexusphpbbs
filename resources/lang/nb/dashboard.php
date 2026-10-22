@@ -47,7 +47,7 @@ return [
         'server_software' => 'Web programvare',
         'load_average' => 'Last inn gjennomsnitt for serveren',
         'filament_version' => 'Versjon av filamentet',
-        'redis_version' => 'Redis versjon',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Bruker siste',

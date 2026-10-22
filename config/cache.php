@@ -2,6 +2,13 @@
 
 use Illuminate\Support\Str;
 
+// Redis is not supported anymore: fall back to the file cache if an old
+// .env file still points at it.
+$defaultCacheStore = env('CACHE_STORE', 'nexus');
+if ($defaultCacheStore === 'redis') {
+    $defaultCacheStore = 'nexus';
+}
+
 return [
 
     /*
@@ -15,7 +22,7 @@ return [
     |
     */
 
-    'default' => 'redis',
+    'default' => $defaultCacheStore,
 
     /*
     |--------------------------------------------------------------------------
@@ -32,6 +39,10 @@ return [
     */
 
     'stores' => [
+
+        'nexus' => [
+            'driver' => 'nexus',
+        ],
 
         'apc' => [
             'driver' => 'apc',

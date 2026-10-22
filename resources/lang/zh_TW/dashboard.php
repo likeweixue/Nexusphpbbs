@@ -47,7 +47,7 @@ return [
         'server_software' => 'Web 軟件',
         'load_average' => '服務器平均負載',
         'filament_version' => 'Filament 版本',
-        'redis_version' => 'Redis 版本',
+        'cache_backend' => '快取後端',
     ],
     'latest_user' => [
         'page_title' => '最新用戶',

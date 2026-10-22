@@ -23,7 +23,7 @@ use App\Exceptions\TrackerException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redis;
+use Nexus\Database\NexusDB;
 use Rhilip\Bencode\Bencode;
 
 class TrackerRepository extends BaseRepository
@@ -633,7 +633,7 @@ class TrackerRepository extends BaseRepository
         $lockKeyOriginal = str_replace([$key, $ip, $ipv4, $ipv6], '', $queryString);
         $lockKey = md5($lockKeyOriginal);
         $startTimestamp = nexus()->getStartTimestamp();
-        $redis = Redis::connection()->client();
+        $redis = NexusDB::redis();
         $cache = $redis->get($lockKey);
         do_log("key: $key, queryString: $queryString, lockKeyOriginal: $lockKeyOriginal, startTimestamp: $startTimestamp, cache: $cache");
         if ($cache === false) {

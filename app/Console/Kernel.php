@@ -39,6 +39,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('cache:prune-stale-tags')->hourly();
+        $schedule->command('cache:gc')->dailyAt('03:30');
         $schedule->command('exam:assign_cronjob')->everyMinute();
         $schedule->command('exam:checkout_cronjob')->everyFiveMinutes();
         $schedule->command('exam:update_progress --bulk=1')->hourly();
@@ -49,8 +50,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('claim:settle')->hourly()->when(function () {
             return Carbon::now()->format('d') == '01';
         });
-        $schedule->command('meilisearch:import')->weeklyOn(1, "03:00");
-        $schedule->command('torrent:load_pieces_hash')->dailyAt("01:00");
         $schedule->job(new CheckQueueFailedJobs())->everySixHours();
         $schedule->job(new MaintainPluginState())->everyMinute();
         $schedule->job(new UpdateIsSeedBoxFromUserRecordsCache())->everySixHours();

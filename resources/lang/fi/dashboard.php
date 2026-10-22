@@ -47,7 +47,7 @@ return [
         'server_software' => 'Web-ohjelmisto',
         'load_average' => 'Palvelimen lataus keskimäärin',
         'filament_version' => 'Filamentin versio',
-        'redis_version' => 'Redis versio',
+        'cache_backend' => 'Cache backend',
     ],
     'latest_user' => [
         'page_title' => 'Käyttäjä viimeisin',

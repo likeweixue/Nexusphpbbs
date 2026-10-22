@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Str;
 
+$sessionDriver = env('SESSION_DRIVER', 'file');
+if ($sessionDriver === 'redis') {
+    $sessionDriver = 'file';
+}
+
 return [
 
     /*
@@ -18,8 +23,7 @@ return [
     |
     */
 
-//    'driver' => env('SESSION_DRIVER', 'file'),
-    'driver' => 'redis',
+    'driver' => $sessionDriver,
 
     /*
     |--------------------------------------------------------------------------

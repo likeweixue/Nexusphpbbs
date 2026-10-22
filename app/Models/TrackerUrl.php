@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\NexusActivityLogTrait;
+use Nexus\Cache\FileStore;
 use Nexus\Database\NexusDB;
 
 class TrackerUrl extends NexusModel
@@ -75,7 +76,7 @@ class TrackerUrl extends NexusModel
         return self::getFromRedisWithRetry($redis, 'get', [self::TRACKER_URL_DEFAULT_CACHE_KEY], $notFoundFlagKey);
     }
 
-    private static function getFromRedisWithRetry(\Redis $redis, string $command, array $params, string $notFoundFlagKey)
+    private static function getFromRedisWithRetry(FileStore $redis, string $command, array $params, string $notFoundFlagKey)
     {
         $result = call_user_func_array([$redis, $command], $params);
         if ($result !== false) {
