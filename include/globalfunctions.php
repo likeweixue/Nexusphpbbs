@@ -822,9 +822,9 @@ function get_user_class()
 {
     if (IN_NEXUS) {
         global $CURUSER;
-        return $CURUSER["class"] ?? '';
+        return intval($CURUSER["class"] ?? 0);
     }
-    return auth()->user()->class;
+    return intval(auth()->user()?->class ?? 0);
 }
 
 function get_user_id()

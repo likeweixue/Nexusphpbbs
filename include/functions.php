@@ -2319,9 +2319,129 @@ function get_if_restricted_is_open()
 	return false;
 }
 
+
+function get_custom_menu_rows(): array
+{
+    static $rows = null;
+    if ($rows !== null) {
+        return $rows;
+    }
+    global $Cache;
+    $cached = $Cache->get_value('custom_menu_rows');
+    if (is_array($cached)) {
+        return $rows = $cached;
+    }
+    $rows = [];
+    try {
+        if (\Nexus\Database\NexusDB::hasTable('custom_menus')) {
+            $res = sql_query("SELECT * FROM custom_menus WHERE enabled = 1 ORDER BY sort ASC, id ASC");
+            while ($row = mysql_fetch_assoc($res)) {
+                $rows[] = $row;
+            }
+        }
+    } catch (\Throwable $throwable) {
+        do_log("load custom menu failed: " . $throwable->getMessage(), 'error');
+    }
+    $Cache->cache_value('custom_menu_rows', $rows, 600);
+    return $rows;
+}
+
+function custom_menu_is_selected(string $url, string $selected): bool
+{
+    $path = parse_url($url, PHP_URL_PATH);
+    if (empty($path)) {
+        return false;
+    }
+    $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    if ($script !== '' && basename($path) === $script) {
+        return true;
+    }
+    if ($selected !== '' && basename($path, '.php') === $selected) {
+        return true;
+    }
+    return false;
+}
+
+function render_custom_menu_node(array $row, array $byParent, string $selected): string
+{
+    $id = intval($row['id']);
+    $children = $byParent[$id] ?? [];
+    $hasChildren = !empty($children);
+    $url = trim((string)($row['url'] ?? ''));
+    if ($url === '') {
+        $url = '#';
+    }
+    $target = ($row['target'] ?? '_self') === '_blank' ? '_blank' : '_self';
+    $classes = [];
+    if ($hasChildren) {
+        $classes[] = 'has-children';
+    }
+    if (custom_menu_is_selected($url, $selected)) {
+        $classes[] = 'selected';
+    }
+    $classAttr = empty($classes) ? '' : ' class="' . implode(' ', $classes) . '"';
+    $html = '<li' . $classAttr . '><a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" target="' . $target . '">'
+        . htmlspecialchars((string)$row['name'], ENT_QUOTES, 'UTF-8') . '</a>';
+    if ($hasChildren) {
+        $html .= '<ul>';
+        foreach ($children as $child) {
+            $html .= render_custom_menu_node($child, $byParent, $selected);
+        }
+        $html .= '</ul>';
+    }
+    return $html . '</li>';
+}
+
+function render_custom_menu(string $selected = ''): string
+{
+    $rows = get_custom_menu_rows();
+    if (empty($rows)) {
+        return '';
+    }
+    $ids = [];
+    foreach ($rows as $row) {
+        $ids[intval($row['id'])] = true;
+    }
+    $byParent = [];
+    foreach ($rows as $row) {
+        $parentId = intval($row['parent_id']);
+        if ($parentId > 0 && !isset($ids[$parentId])) {
+            $parentId = 0;
+        }
+        $byParent[$parentId][] = $row;
+    }
+    if (empty($byParent[0])) {
+        return '';
+    }
+    $css = <<<'CSS'
+<style>
+ul.nexus-custom-menu, ul.nexus-custom-menu ul { list-style: none; margin-left: 0; padding-left: 0; }
+ul.nexus-custom-menu { overflow: visible; }
+ul.nexus-custom-menu li { display: inline-block; position: relative; vertical-align: top; }
+ul.nexus-custom-menu li ul { background: #fffdf2; border: 1px solid #b87700; box-shadow: 0 2px 6px rgba(0,0,0,.18); display: none; left: 0; margin: 1px 0 0; min-width: 130px; padding: 2px 0; position: absolute; text-align: left; top: 100%; white-space: nowrap; z-index: 3000; }
+ul.nexus-custom-menu li:hover > ul, ul.nexus-custom-menu li:focus-within > ul { display: block; }
+ul.nexus-custom-menu li ul li { display: block; margin: 0; }
+ul.nexus-custom-menu li ul li a { background: #fffdf2 !important; border: 0 !important; color: #2d2b2b !important; display: block !important; font: bold 12px verdana !important; margin: 0 !important; min-width: 130px; padding: 6px 12px !important; position: static !important; text-align: left !important; text-decoration: none !important; top: auto !important; }
+ul.nexus-custom-menu li ul li a:hover { background: #f3a52a !important; color: #000 !important; text-decoration: none !important; }
+ul.nexus-custom-menu li ul li ul { margin-left: 1px; margin-top: -3px; left: 100%; top: 0; }
+ul.nexus-custom-menu li.has-children > a::after { content: "\25BE"; font-size: 9px; margin-left: 4px; }
+ul.nexus-custom-menu li ul li.has-children > a::after { content: "\25B8"; float: right; margin-left: 8px; }
+</style>
+CSS;
+    $html = $css . '<ul id="mainmenu" class="menu nexus-custom-menu">';
+    foreach ($byParent[0] as $row) {
+        $html .= render_custom_menu_node($row, $byParent, $selected);
+    }
+    return $html . '</ul>';
+}
+
 function menu ($selected = "home") {
 	global $lang_functions;
 	global $BASEURL,$CURUSER;
+	if (empty($CURUSER)) {
+		print ("<div id=\"nav\"><ul id=\"mainmenu\" class=\"menu\"><li class=\"selected\"><a href=\"forums.php\">" . $lang_functions['text_forums'] . "</a></li></ul></div>");
+		return;
+	}
 	global $enableoffer, $enablespecial, $enableextforum, $extforumurl, $where_tweak;
 	global $USERUPDATESET;
 	//no this option in config.php
@@ -2363,6 +2483,8 @@ function menu ($selected = "home") {
 	print ("<div id=\"nav\">");
 	if ($menu) {
 	    print $menu;
+    } elseif (($customMenu = render_custom_menu($selected)) !== '') {
+        print $customMenu;
     } else {
 	    $lang = get_langfolder_cookie();
         $normalSectionName = get_searchbox_value(get_setting('main.browsecat'), 'section_name');
@@ -2632,7 +2754,13 @@ if ($enabledonation == 'yes'){?>
 
 <table class="mainouter" width="<?php echo CONTENT_WIDTH ?>" cellspacing="0" cellpadding="5" align="center">
 	<tr><td id="nav_block" class="text" align="center">
-<?php if (!$CURUSER) { ?>
+<?php if (!$CURUSER) {
+    if (guest_forum_access_enabled()) {
+        begin_main_frame();
+        menu();
+        end_main_frame();
+    }
+?>
 			<a href="login.php"><font class="big"><b><?php echo $lang_functions['text_login'] ?></b></font></a> / <a href="signup.php"><font class="big"><b><?php echo $lang_functions['text_signup'] ?></b></font></a>
 <?php }
 else {
@@ -4903,6 +5031,9 @@ function get_user_id_from_name($username){
 
 function is_forum_moderator($id, $in = 'post'){
 	global $CURUSER;
+	if (empty($CURUSER['id'])) {
+		return false;
+	}
 	switch($in){
 		case 'post':{
 			$res = sql_query("SELECT topicid FROM posts WHERE id=$id") or sqlerr(__FILE__, __LINE__);
@@ -5424,10 +5555,20 @@ function getFullDirectory($dir)
     return $dir;
 }
 
+function guest_forum_access_enabled(): bool
+{
+    return get_setting('main.guest_forum_access', 'no') === 'yes';
+}
+
 function checkGuestVisit()
 {
     if (userlogin()) {
         //already login
+        return;
+    }
+    // Guests may browse the forum when guest access is enabled, even if a
+    // guest-visit landing page / redirect was configured.
+    if (guest_forum_access_enabled() && in_array(nexus()->getScript(), ['forums', 'getrss'])) {
         return;
     }
     $setting = get_setting('security');

@@ -33,7 +33,7 @@ if ($action == 'savesettings_main')	// save main
 	do_log(json_encode($_REQUEST));
 	stdhead($lang_settings['head_save_main_settings']);
 	$validConfig = array(
-		'site_online','max_torrent_size','announce_interval', 'annintertwoage', 'annintertwo', 'anninterthreeage', 'anninterthree', 'signup_timeout',
+		'site_online','guest_forum_access','max_torrent_size','announce_interval', 'annintertwoage', 'annintertwo', 'anninterthreeage', 'anninterthree', 'signup_timeout',
 		'minoffervotes','offervotetimeout','offeruptimeout','maxsubsize','postsperpage', 'topicsperpage', 'torrentsperpage', 'maxnewsnum',
 		'max_dead_torrent_time','maxusers','torrent_dir', 'iniupload','SITEEMAIL', 'ACCOUNTANTID', 'ALIPAYACCOUNT', 'PAYPALACCOUNT', 'SLOGAN',
 		'icplicense', 'autoclean_interval_one', 'autoclean_interval_two', 'autoclean_interval_three','autoclean_interval_four', 'autoclean_interval_five',
@@ -798,6 +798,12 @@ elseif ($action == 'mainsettings')	// main settings
 	$sh = "gmail.com";
 
 	yesorno($lang_settings['row_site_online'], 'site_online', $MAIN['site_online'], $lang_settings['text_site_online_note']);
+	$isChineseSettings = str_starts_with(get_langfolder_cookie(), 'ch');
+	$guestAccessLabel = $isChineseSettings ? '站点访问权限' : 'Guest access';
+	$guestAccessNote = $isChineseSettings
+        ? '默认“否”。开启后，未登录访客只能浏览论坛（forums.php），顶部菜单只显示“论坛”。'
+        : 'Default "No". When enabled, guests can only browse the forum (forums.php) and the top menu shows only "Forums".';
+	yesorno($guestAccessLabel, 'guest_forum_access', $MAIN['guest_forum_access'] ?? 'no', $guestAccessNote);
 	yesorno($lang_settings['row_enable_invite_system'], 'invitesystem', $MAIN['invitesystem'], $lang_settings['text_invite_system_note']);
 	
 	tr($lang_settings['row_initial_invites'],"<input type='text' name=invite_count style=\"width: 50px\" value={$MAIN['invite_count']}> ".$lang_settings['text_initial_invites_note'], 1);

@@ -19,13 +19,6 @@ class ModpanelTableSeeder extends Seeder
         \DB::table('modpanel')->delete();
 
         \DB::table('modpanel')->insert(array (
-            0 =>
-            array (
-                'id' => 1,
-                'name' => 'Abnormal Upload Speed Detector',
-                'url' => 'cheaters.php',
-                'info' => 'See cheaters',
-            ),
             1 =>
             array (
                 'id' => 2,
@@ -33,26 +26,12 @@ class ModpanelTableSeeder extends Seeder
                 'url' => 'ipcheck.php',
                 'info' => 'Check for Duplicate IP Users',
             ),
-            2 =>
-            array (
-                'id' => 3,
-            'name' => 'All Clients (currently)',
-                'url' => 'allagents.php',
-            'info' => 'Show All Clients (currently downloading/uploading/seeding)',
-            ),
             3 =>
             array (
                 'id' => 4,
                 'name' => 'Ad management',
                 'url' => 'admanage.php',
                 'info' => 'Manage ads at your site',
-            ),
-            4 =>
-            array (
-                'id' => 5,
-                'name' => 'Uploaders',
-                'url' => 'uploaders.php',
-                'info' => 'See uploaders stats',
             ),
             5 =>
             array (

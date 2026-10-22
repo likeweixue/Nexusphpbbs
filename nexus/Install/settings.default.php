@@ -14,6 +14,7 @@ return array (
   'main' =>
   array (
     'site_online' => 'yes',
+    'guest_forum_access' => 'no',
     'max_torrent_size' => '1048576',
     'announce_interval' => '1800',
     'annintertwoage' => '7',

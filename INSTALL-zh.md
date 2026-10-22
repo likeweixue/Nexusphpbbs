@@ -158,7 +158,7 @@ public/                 （安装时创建 attachments、bitbucket 软链接）
    ```
 
    旧的 `REDIS_HOST`、`CACHE_DRIVER=redis` 等可以保留，也可以删除，程序不会再连接 Redis。
-4. 执行一次数据库迁移（通常没有新迁移，执行也无害）：
+4. 执行数据库迁移（0.1.4 新增了自定义菜单表、主题记录和面板清理，必须执行）：
 
    ```bash
    php artisan migrate --force
@@ -169,6 +169,13 @@ public/                 （安装时创建 attachments、bitbucket 软链接）
 6. 保留原来的 `dont_delete_install.lock`，不要重复安装；计划任务按上面的配置即可。
 
 > 如果旧站启用了 Redis 队列（Horizon / Supervisor），升级后可以停止并删除这些进程，本版本不再需要。
+
+## 三之二、0.1.4 新功能入口
+
+- **自定义菜单**：登录管理组账号 → `staffpanel.php` → 系统面板“菜单栏设置”，或直接访问 `custommenu.php`。
+- **访客浏览**：`settings.php` → 主设置 → “站点访问权限”选“是”，未登录访客只能浏览论坛。
+- **论坛 RSS**：访问 `getrss.php`，选择分区/板块/主题生成订阅地址；顶部 RSS 图标也可进入。
+- **复古黄色主题**：`settings.php` 的“默认界面风格”或用户控制面板里选择“复古黄色”。
 
 ## 四、缓存说明（替代 Redis）
 

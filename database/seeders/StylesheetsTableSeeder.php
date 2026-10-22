@@ -64,6 +64,15 @@ class StylesheetsTableSeeder extends Seeder
                 'designer' => 'Xia Zuojie',
                 'comment' => 'Baidu Hi clone',
             ),
+            5 => 
+            array (
+                'id' => 8,
+                'uri' => 'styles/RetroYellow/',
+                'name' => '复古黄色',
+                'addicode' => '',
+                'designer' => '自定义',
+                'comment' => '复古黄色主题',
+            ),
         ));
         
         

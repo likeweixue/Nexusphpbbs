@@ -8,6 +8,7 @@ if (file_exists($langFile)) {
 	require $langFile;
 }
 stdhead($lang_staffpanel["Administration"] ?? 'Administration');
+$isChineseStaff = str_starts_with(get_langfolder_cookie(), 'ch');
 print("<h1 align=center>" . ($lang_staffpanel["Administration"] ?? 'Administration') . "</h1>");
 if (get_user_class() < UC_MODERATOR)
 {
@@ -33,6 +34,11 @@ if (get_user_class() >= UC_SYSOP) {
 		$info = $lang_staffpanel[$row['info']] ?? $row['info'];
 
 		echo("<tr><td class=rowfollow align=left><strong><a href=$url>$name</a></strong></td> <td class=rowfollow align=left>$info</td></tr>");
+		if ($row['url'] === 'increment-bulk.php') {
+			$menuName = $isChineseStaff ? '菜单栏设置' : 'Menu Settings';
+			$menuInfo = $isChineseStaff ? '增加、减少、调整网站的菜单' : 'Add, remove or reorder site menus';
+			echo("<tr><td class=rowfollow align=left><strong><a href=custommenu.php>$menuName</a></strong></td> <td class=rowfollow align=left>$menuInfo</td></tr>");
+		}
 	}
 	print("</table>");
 	print("<br />");

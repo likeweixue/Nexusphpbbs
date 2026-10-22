@@ -2,8 +2,14 @@
 require "../include/bittorrent.php";
 dbconn();
 require_once(get_langfile_path());
-loggedinorreturn();
-parked();
+$guestAccessEnabled = guest_forum_access_enabled();
+if (empty($CURUSER)) {
+    if (!$guestAccessEnabled) {
+        loggedinorreturn();
+    }
+} else {
+    parked();
+}
 if ($enableextforum == 'yes') //check whether internal forum is disabled
 	permissiondenied();
 
@@ -114,21 +120,26 @@ function get_forum_row($forumid = 0)
 function get_last_read_post_id($topicid) {
 	global $CURUSER, $Cache;
 	static $ret;
-	if (!$ret && !$ret = $Cache->get_value('user_'.$CURUSER['id'].'_last_read_post_list')){
+	$uid = intval($CURUSER['id'] ?? 0);
+	$lastCatchup = intval($CURUSER['last_catchup'] ?? 0);
+	if ($uid <= 0) {
+		return 0;
+	}
+	if (!$ret && !$ret = $Cache->get_value('user_'.$uid.'_last_read_post_list')){
 		$ret = array();
-		$res = sql_query("SELECT * FROM readposts WHERE userid=" . sqlesc($CURUSER['id']));
+		$res = sql_query("SELECT * FROM readposts WHERE userid=" . sqlesc($uid));
 		if (mysql_num_rows($res) != 0){
 			while ($row = mysql_fetch_array($res))
 			$ret[$row['topicid']] = $row['lastpostread'];
-			$Cache->cache_value('user_'.$CURUSER['id'].'_last_read_post_list', $ret, 900);
+			$Cache->cache_value('user_'.$uid.'_last_read_post_list', $ret, 900);
 		}
-		else $Cache->cache_value('user_'.$CURUSER['id'].'_last_read_post_list', 'no record', 900);
+		else $Cache->cache_value('user_'.$uid.'_last_read_post_list', 'no record', 900);
 	}
-	if ($ret != "no record" && isset($ret[$topicid]) && $CURUSER['last_catchup'] < $ret[$topicid]){
+	if ($ret != "no record" && isset($ret[$topicid]) && $lastCatchup < $ret[$topicid]){
 		return $ret[$topicid];
 	}
-	elseif ($CURUSER['last_catchup'])
-		return $CURUSER['last_catchup'];
+	elseif ($lastCatchup)
+		return $lastCatchup;
 	else return 0;
 }
 
@@ -216,6 +227,10 @@ $today_date = date("Y-m-d",TIMENOW);
 // ------------- end: Global variables ------------------//
 
 $action = htmlspecialchars(trim($_GET["action"] ?? ''));
+if (empty($CURUSER) && !in_array($action, ['', 'viewforum', 'viewtopic'], true)) {
+    // Guests may only read the forum.
+    loggedinorreturn();
+}
 
 //-------- Action: New topic
 if ($action == "newtopic")
@@ -518,7 +533,7 @@ if ($action == "viewtopic")
 		$where = "WHERE topicid=".sqlesc($topicid);
 		$addparam = "action=viewtopic&topicid=".$topicid;
 	}
-	$userid = $CURUSER["id"];
+	$userid = intval($CURUSER["id"] ?? 0);
 
 	//------ Get topic info
 
@@ -545,7 +560,7 @@ if ($action == "viewtopic")
 
 	if (get_user_class() < $row["minclassread"])
 		stderr($lang_forums['std_error'], $lang_forums['std_unpermitted_viewing_topic']);
-	if (((get_user_class() >= $row["minclasswrite"] && !$locked) || user_can('postmanage') || $is_forummod) && $CURUSER["forumpost"] == 'yes')
+	if (((get_user_class() >= $row["minclasswrite"] && !$locked) || user_can('postmanage') || $is_forummod) && ($CURUSER["forumpost"] ?? 'no') == 'yes')
 		$maypost = true;
 	else $maypost = false;
 
@@ -590,7 +605,7 @@ if ($action == "viewtopic")
 		$page = $pages - 1;
 		}
 	}
-	else {if ($CURUSER["clicktopic"] == "firstpage")
+	else {if (($CURUSER["clicktopic"] ?? '') == "firstpage")
 		$page = 0;
 		else $page = $pages-1;
 	}
@@ -714,8 +729,8 @@ if ($action == "viewtopic")
 			$Cache->cache_value('user_'.$posterid.'_post_count', $forumposts, 3600);
 		}
 
-		$signature = ($CURUSER["signatures"] == "yes" ? $arr2["signature"] : "");
-		$avatar = ($CURUSER["avatars"] == "yes" ? htmlspecialchars($arr2["avatar"]) : "");
+		$signature = (($CURUSER["signatures"] ?? 'yes') == "yes" ? $arr2["signature"] : "");
+		$avatar = (($CURUSER["avatars"] ?? 'yes') == "yes" ? htmlspecialchars($arr2["avatar"]) : "");
 
 		$uclass = get_user_class_image($arr2["class"]);
 		$by = get_username($posterid,false,true,true,false,false,true);
@@ -726,12 +741,12 @@ if ($action == "viewtopic")
 		if ($pn == $pc)
 		{
 			print("<span id=\"last\"></span>\n");
-			if ($postid > $lpr){
-				if ($lpr == $CURUSER['last_catchup']) // There is no record of this topic
+			if ($postid > $lpr && $userid > 0){
+				if ($lpr == ($CURUSER['last_catchup'] ?? 0)) // There is no record of this topic
 					sql_query("INSERT INTO readposts(userid, topicid, lastpostread) VALUES (".$userid.", ".$topicid.", ".$postid.")") or sqlerr(__FILE__, __LINE__);
-				elseif ($lpr > $CURUSER['last_catchup']) //There is record of this topic
+				elseif ($lpr > ($CURUSER['last_catchup'] ?? 0)) //There is record of this topic
 					sql_query("UPDATE readposts SET lastpostread=$postid WHERE userid=$userid AND topicid=$topicid") or sqlerr(__FILE__, __LINE__);
-				$Cache->delete_value('user_'.$CURUSER['id'].'_last_read_post_list');
+				$Cache->delete_value('user_'.$userid.'_last_read_post_list');
 			}
 		}
 
@@ -780,10 +795,12 @@ if ($action == "viewtopic")
 		return_avatar_image($avatar). "<br /><br /><br />&nbsp;&nbsp;<img alt=\"".get_user_class_name($arr2["class"],false,false,true)."\" title=\"".get_user_class_name($arr2["class"],false,false,true)."\" src=\"".$uclass."\" />".$stats."</td><td class=\"rowfollow\" valign=\"top\"><br />".$body."</td></tr>\n");
 		$secs = 900;
 		$dt = sqlesc(date("Y-m-d H:i:s",(TIMENOW - $secs))); // calculate date.
+		if (!empty($CURUSER)) {
 		print("<tr><td class=\"rowfollow\" align=\"center\" valign=\"middle\">".("'".$arr2['last_access']."'">$dt?"<img class=\"f_online\" src=\"pic/trans.gif\" alt=\"Online\" title=\"".$lang_forums['title_online']."\" />":"<img class=\"f_offline\" src=\"pic/trans.gif\" alt=\"Offline\" title=\"".$lang_forums['title_offline']."\" />" )."<a href=\"sendmessage.php?receiver=".htmlspecialchars(trim($arr2["id"]))."\"><img class=\"f_pm\" src=\"pic/trans.gif\" alt=\"PM\" title=\"".$lang_forums['title_send_message_to'].htmlspecialchars($arr2["username"])."\" /></a><a href=\"report.php?forumpost=$postid\"><img class=\"f_report\" src=\"pic/trans.gif\" alt=\"Report\" title=\"".$lang_forums['title_report_this_post']."\" /></a></td>");
+		}
 		print("<td class=\"toolbox\" align=\"right\">");
 
-		do_action('post_toolbox', $arr, $allPosts, $CURUSER['id']);
+		do_action('post_toolbox', $arr, $allPosts, ($CURUSER['id'] ?? 0));
 
 		if ($maypost && $canViewProtected)
 		print("<a href=\"".htmlspecialchars("?action=quotepost&postid=".$postid)."\"><img class=\"f_quote\" src=\"pic/trans.gif\" alt=\"Quote\" title=\"".$lang_forums['title_reply_with_quote']."\" /></a>");
@@ -791,7 +808,7 @@ if ($action == "viewtopic")
 		if (user_can('postmanage') || $is_forummod)
 		print("<a href=\"".htmlspecialchars("?action=deletepost&postid=".$postid)."\"><img class=\"f_delete\" src=\"pic/trans.gif\" alt=\"Delete\" title=\"".$lang_forums['title_delete_post']."\" /></a>");
 
-		if (($CURUSER["id"] == $posterid && !$locked) || user_can('postmanage') || $is_forummod)
+		if ((($CURUSER["id"] ?? 0) == $posterid && !$locked) || user_can('postmanage') || $is_forummod)
 		print("<a href=\"".htmlspecialchars("?action=editpost&postid=".$postid)."\"><img class=\"f_edit\" src=\"pic/trans.gif\" alt=\"Edit\" title=\"".$lang_forums['title_edit_post']."\" /></a>");
 		print("</td></tr></table>");
 	}
@@ -1113,7 +1130,7 @@ if ($action == "viewforum")
 	//------ Get forum name, moderators
 	$row = get_forum_row($forumid);
 	if (!$row){
-		write_log("User " . $CURUSER["username"] . "," . $CURUSER["ip"] . " is trying to visit forum that doesn't exist", 'mod');
+		write_log("User " . ($CURUSER["username"] ?? "Guest") . "," . ($CURUSER["ip"] ?? getip()) . " is trying to visit forum that doesn't exist", 'mod');
 		stderr($lang_forums['std_forum_error'],$lang_forums['std_forum_not_found']);
 	}
 	if (get_user_class() < $row["minclassread"])
@@ -1173,7 +1190,7 @@ if ($action == "viewforum")
 	print("<h1 align=\"center\"><a class=\"faqlink\" href=\"forums.php\">".$SITENAME."&nbsp;".$lang_forums['text_forums'] ."</a>--><a class=\"faqlink\" href=\"".htmlspecialchars("forums.php?action=viewforum&forumid=".$forumid)."\">".$forumname."</a></h1>\n");
 	end_main_frame();
 	print("<br />");
-	$maypost = get_user_class() >= $row["minclasswrite"] && get_user_class() >= $row["minclasscreate"] && $CURUSER["forumpost"] == 'yes';
+	$maypost = get_user_class() >= $row["minclasswrite"] && get_user_class() >= $row["minclasscreate"] && ($CURUSER["forumpost"] ?? 'no') == 'yes';
 
 	if (!$maypost)
 		print("<p><i>".$lang_forums['text_unpermitted_starting_new_topics']."</i></p>\n");
@@ -1253,8 +1270,8 @@ if ($action == "viewforum")
 			$lpusername = get_username($lpuserid);
 			$lpadded = gettime($arr["added"],true,false);
 			$onmouseover = "";
-			if ($enabletooltip_tweak == 'yes' && $CURUSER['showlastpost'] != 'no'){
-				if ($CURUSER['timetype'] != 'timealive')
+			if ($enabletooltip_tweak == 'yes' && ($CURUSER['showlastpost'] ?? 'yes') != 'no'){
+				if (($CURUSER['timetype'] ?? 'timealive') != 'timealive')
 					$lastposttime = $lang_forums['text_at_time'].$arr["added"];
 				else
 					$lastposttime = $lang_forums['text_blank'].gettime($arr["added"],true,false,true);
@@ -1275,7 +1292,7 @@ if ($action == "viewforum")
 				$img = get_topic_image($locked ? "locked" : "read");
 			else{
 				$img = get_topic_image($locked ? "lockednew" : "unread");
-				if ($lastpostread != $CURUSER['last_catchup'])
+				if ($lastpostread != ($CURUSER['last_catchup'] ?? 0))
 					$subject .= "&nbsp;&nbsp;<a href=\"".htmlspecialchars("?action=viewtopic&forumid=".$forumid."&topicid=".$topicid."&page=p".$lastpostread."#pid".$lastpostread)."\" title=\"".$lang_forums['title_jump_to_unread']."\"><font class=\"small new\"><b>".$lang_forums['text_new']."</b></font></a>";
 			}
 
@@ -1317,7 +1334,7 @@ if ($action == "viewforum")
 <?php
 		print("</tr></table>");
 		print($pagerbottom);
-		if ($enabletooltip_tweak == 'yes' && $CURUSER['showlastpost'] != 'no')
+		if ($enabletooltip_tweak == 'yes' && ($CURUSER['showlastpost'] ?? 'yes') != 'no')
 			create_tooltip_container($lastpost_tooltip, 400);
 	} // if
 	else
@@ -1494,7 +1511,9 @@ if ($CURUSER)
 stdhead($lang_forums['head_forums']);
 begin_main_frame();
 print("<h1 align=\"center\">".$SITENAME."&nbsp;".$lang_forums['text_forums']."</h1>");
-print("<p align=\"center\"><a href=\"?action=search\"><b>".$lang_forums['text_search']."</b></a> | <a href=\"?action=viewunread\"><b>".$lang_forums['text_view_unread']."</b></a> | <a href=\"?catchup=1\"><b>".$lang_forums['text_catch_up']."</b></a> ".(user_can('forummanage') ? "| <a href=\"forummanage.php\"><b>".$lang_forums['text_forum_manager']."</b></a>":"")."</p>");
+if (!empty($CURUSER)) {
+    print("<p align=\"center\"><a href=\"?action=search\"><b>".$lang_forums['text_search']."</b></a> | <a href=\"?action=viewunread\"><b>".$lang_forums['text_view_unread']."</b></a> | <a href=\"?catchup=1\"><b>".$lang_forums['text_catch_up']."</b></a> ".(user_can('forummanage') ? "| <a href=\"forummanage.php\"><b>".$lang_forums['text_forum_manager']."</b></a>":"")."</p>");
+}
 print("<table border=\"1\" cellspacing=\"0\" cellpadding=\"5\" width=\"100%\">\n");
 
 if (!$overforums = $Cache->get_value('overforums_list')){

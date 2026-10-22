@@ -3,6 +3,9 @@ require "../include/bittorrent.php";
 dbconn(true);
 require_once(get_langfile_path());
 require_once(get_langfile_path("forums.php"));
+if (empty($CURUSER) && guest_forum_access_enabled()) {
+    nexus_redirect('forums.php');
+}
 loggedinorreturn(true);
 $userid = $CURUSER["id"];
 if ($_SERVER["REQUEST_METHOD"] == "POST")
